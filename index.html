@@ -4,15 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medidor de Velocidade de Rede</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { font-size: 24px; margin-bottom: 20px; }
+        #resultados { margin-bottom: 20px; }
+        .progress-bar { width: 0%; height: 20px; background-color: #007bff; transition: width 0.5s ease-in-out; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Medidor de Velocidade de Rede</h1>
-        <div id="resultados"></div>
+        <input type="text" id="url" value="https://example.com" style="width: 300px;">
         <button id="testar-download">Testar Download</button>
         <button id="testar-upload">Testar Upload</button>
+        <div id="resultados"></div>
+        <div id="barra-carregamento">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
     </div>
-    <script src="script.js"></script>
+    <script>
+        const testarDownloadBtn = document.getElementById('testar-download');
+        const testarUploadBtn = document.getElementById('testar-upload');
+        const resultadosDiv = document.getElementById('resultados');
+        const progressBar = document.getElementById('progress-bar');
+
+        testarDownloadBtn.addEventListener('click', () => {
+            const url = document.getElementById('url').value;
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const tamanhoArquivo = blob.size;
+                    const tempoInicio = performance.now();
+                    fetch(url)
+                        .then(response => response.blob())
+                        .then(blob => {
+                            const tempoFim = performance.now();
+                            const velocidade = tamanhoArquivo / ((tempoFim - tempoInicio) / 1000);
+                            resultadosDiv.innerHTML = `Velocidade de Download: ${velocidade.toFixed(2)} MB/s`;
+                            progressBar.style.width = `${(velocidade / 100) * 100}%`;
+                        });
+                });
+        });
+
+        testarUploadBtn.addEventListener('click', () => {
+            const url = document.getElementById('url').value;
+            const dados = new Blob(['A'.repeat(1024 * 1024)]); // 1MB de dados
+            fetch(url, { method: 'POST', body: dados })
+                .then(response => response.json())
+                .then(data => {
+                    const tamanhoArquivo = data.fileSize;
+                    const tempoInicio = performance.now();
+                    fetch(url, { method: 'POST', body: dados })
+                        .then(response => response.json())
+                        .then(data => {
+                            const tempoFim = performance.now();
+                            const velocidade = tamanhoArquivo / ((tempoFim - tempoInicio) / 1000);
+                            resultadosDiv.innerHTML = `Velocidade de Upload: ${velocidade.toFixed(2)} MB/s`;
+                            progressBar.style.width = `${(velocidade / 100) * 100}%`;
+                        });
+                });
+        });
+    </script>
 </body>
 </html>
